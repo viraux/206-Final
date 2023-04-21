@@ -7,7 +7,7 @@ import numpy as np
 import re
 import requests
 
-
+# Create database and set up cursor and connection
 def setUpDatabase(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path+'/'+db_name)
@@ -41,7 +41,8 @@ def runtimeByGenre(cur):
         d[current_genre] = round(genre_runtime,2)
 
     return d
-        
+
+# Plots values for average percent change in runtime for each year 
 def percentDif(data):
     d = {}
     items = list(data.items())
@@ -103,6 +104,7 @@ def plotYear(data):
 
     ax.set_xlabel("Year")
     ax.set_ylabel("Average Runtime")
+    ax.set_title("Average Movie Runtime by Year Over Time")
 
 
     fig.savefig("Average_Runtime_by_Year")
@@ -132,6 +134,7 @@ def plotPercent(data):
 
     ax.set_xlabel("Year")
     ax.set_ylabel("Percent Change in Average Runtime")
+    ax.set_title("Percent Change in Average Movie Runtime (based on first year)")
 
 
     fig.savefig("Percent_Average_Runtime_by_Year")
@@ -148,10 +151,12 @@ def plotGenre(data):
     for genre in data:
         x = genre
         y = data[genre]
-        ax.barh(x, y, linewidth=2)
+        bars = ax.barh(x, y, linewidth=2)
+        ax.bar_label(bars)
 
     ax.set_ylabel("Genre")
     ax.set_xlabel("Average Runtime")
+    ax.set_title("Average Runtime for each Movie Genre")
 
     fig.savefig("Average_Runtime_by_Genre")
 
@@ -165,10 +170,12 @@ def plotRating(data):
     for rating in data:
         x = rating
         y = data[rating]
-        ax.bar(x, y, linewidth=2)
+        bars = ax.bar(x, y, linewidth=2)
+        ax.bar_label(bars)
 
     ax.set_xlabel("Rating")
     ax.set_ylabel("Average Metacritic Score")
+    ax.set_title("Average Metacritic Score for each Rating")
 
     fig.savefig("Average_Score_by_Rating")
 
@@ -176,6 +183,7 @@ def plotRating(data):
     pass
 
 
+# Write the calculated data to a json file
 def writeData(data_l):
     final_d = {}
     ratings = ['PG','PG-13','G','R','Not Rated']
@@ -211,27 +219,27 @@ def writeData(data_l):
 
 
 
-
+# Calls all calculation files, plots the data, and the writes the data
 def main():
     data_l = []
-    cur = setUpDatabase("movies.db")
+    cur = setUpDatabase("final.db")
     year_d = runtimeByYear(cur)
     # print(year_d)
     data_l.append(year_d)
     percent_d = percentDif(year_d)
     data_l.append(percent_d)
-    # plotPercent(percent_d)
-    # plotYear(year_d)
+    plotPercent(percent_d)
+    plotYear(year_d)
 
     genre_d = runtimeByGenre(cur)
     # print(genre_d)
     data_l.append(genre_d)
-    # plotGenre(genre_d)
+    plotGenre(genre_d)
 
     score_d = scoreByRating(cur)
     # print(score_d)
     data_l.append(score_d)
-    # plotRating(score_d)
+    plotRating(score_d)
 
     # print(data_l)
 

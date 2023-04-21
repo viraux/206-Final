@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import re
 import requests
 
+# Create database and set up cursor and connection
 def setUpDatabase(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path+'/'+db_name)
@@ -13,7 +14,9 @@ def setUpDatabase(db_name):
     return cur, conn
 
 
-
+# Based on a passed year and index, query the API for 100 responses and only save the 25 that
+# is determined by the index value.
+# Stores id, title, year, runtime, 3 genres, rating, and score values for each movie
 def collectData(key, year, index):
     query = f"""https://imdb-api.com/API/AdvancedSearch/{key}?title_type=feature&release_date={year}-01-01,{year}-12-31&languages=en&count=100&sort=boxoffice_gross_us,desc"""
     # print(query)
@@ -49,6 +52,7 @@ def collectData(key, year, index):
 
     return data_l
 
+# Create Movies, Genres, and Ratings tables to add to if it does not exist
 def createTables(cur,conn):
     cur.execute("""CREATE TABLE IF NOT EXISTS Movies
     (id TEXT PRIMARY KEY UNIQUE, title TEXT, year INTEGER, runtime INTEGER, genre1_id INTEGER, genre2_id INTEGER, genre3_id INTEGER, 
@@ -63,6 +67,7 @@ def createTables(cur,conn):
     conn.commit()
 
 
+# Update the Genres and Ratings table with any new ratings or genres in collected data
 def updateSideTables(cur, conn, data_l):
     for data in data_l:
         # print(data)
@@ -73,6 +78,7 @@ def updateSideTables(cur, conn, data_l):
     conn.commit()
     pass
 
+# Update the Movies table with collected data and genres/ratings converted to id's
 def updateMainTable(cur,conn,data_l):
     for data in data_l:
         genre_l = data[-3]
@@ -105,8 +111,11 @@ def updateMainTable(cur,conn,data_l):
 
 def main():
     api_key = "k_xsn1aztr"
-    cur, conn = setUpDatabase("movies.db")
+    cur, conn = setUpDatabase("final.db")
     createTables(cur, conn)
+
+    # Prompt user for input until a valid one is entered or -1 is entered to stop program without adding
+    # Also keeps track of index to use and year to search
     while True:
         try:
             user_year = int(input("""Please input a year between 2001 and 2022 to add 25 movies from (type "-1" to end code). """))
